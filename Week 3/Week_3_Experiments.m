@@ -3,11 +3,22 @@ clear
 
 C = 343; %Speed of sound m/s
 
-[y1,Fs] = audioread('DrumDistant.wav'); %Loading in recordings
-[y2,~] = audioread('DrumSpot.wav');
+[y1,Fs] = audioread('Time20.wav'); %Loading in recordings
+[y2,~] = audioread('Time0.wav');
 
-Distant = y1(:,1); %Converting Stereo signals to mono
-Spot = y2(:,1);
+if(size(y1,1)> size(y2,1)) %Converting Stereo signals to mono and cropping to ensure signals are of equal length    
+    Distant = y1(1:size(y2,1),1); 
+    Spot = y2(:,1);
+    
+elseif(size(y2,1)> size(y1,1))    
+    Distant = y1(:,1); 
+    Spot = y2(1:size(y1,1),1);
+    
+else
+    Distant = y1(:,1);
+    Spot = y2(:,1); 
+    
+end
 
 Nsamples = size(Spot,1); %Sample Length of recordings
 duration = Nsamples/Fs; %Recordings length in seconds
@@ -19,15 +30,17 @@ duration = Nsamples/Fs; %Recordings length in seconds
 r1 = xcorr(Spot, Distant); %Cross correlation
 delay1 = find(r1==max(r1))-Nsamples;
 
+bounds = 1024*4; % Cross correlation plot bounds
+
 figure(1)
 hold on
 
-plot(-1024:1024, r1(Nsamples-1024:Nsamples+1024)); %Plotting the cross correlation between the two signals 
-axis([-1024 1024 -4 5])
+plot(-bounds:bounds, r1(Nsamples-bounds:Nsamples+bounds)); %Plotting the cross correlation between the two signals 
+axis([-bounds bounds min(r1)-1 max(r1)+1])
 grid on;
 yline(0, 'r--', 'LineWidth', 1); 
 title('Cross correlation between Spot and Distant mic signals');
-xlabel('Sample Shift (bounded by +/-1024 sample shift)');
+xlabel(['Sample Shift (bounded to +/- ', num2str(bounds), ')']);
 ylabel('Cross Correlation')
 
 textLabel = sprintf('Max at Shift = %0.0f', delay1);
@@ -37,7 +50,7 @@ plot(delay1,r1(delay1+Nsamples),'.','MarkerSize',10)
 textLabel = sprintf('Correlation at shift = 0');
 text(10, r1(Nsamples), textLabel);
 plot(0,r1(Nsamples),'.','MarkerSize',10)
-line([-1024,0],[r1(Nsamples),r1(Nsamples)],'color', 'green', 'linestyle', '--', 'LineWidth', 1);
+line([-bounds,0],[r1(Nsamples),r1(Nsamples)],'color', 'green', 'linestyle', '--', 'LineWidth', 1);
 
 
 delay2 = finddelay(Distant,Spot);
@@ -47,6 +60,7 @@ distance = abs(delay1)*C/Fs;% d = |samples|*C/fs
 
 fprintf('\nCalculated delay between mic signals using cross correlation on entire signals = %0.0f samples\n\n', delay1);
 fprintf('Calculated distance between mics = %fm\n\n', distance);
+fprintf('Delay in seconds between signals = %fs\n\n', abs(delay1)/Fs);
 
 
 
