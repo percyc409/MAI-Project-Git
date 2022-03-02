@@ -20,7 +20,7 @@ array<double> outputParameters(audioInputsCount);
 array<double> outputParametersMin(audioInputsCount);
 array<double> outputParametersMax(audioInputsCount);
 
-// we'll keep our gain values here (set default to 1)
+//we'll keep our gain values here (set default to 1)
 double gain = 1;
 double norm = 1;
 double mono = 0;
